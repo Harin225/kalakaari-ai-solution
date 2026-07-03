@@ -1,0 +1,42 @@
+
+# --- Index Configuration ---
+# 1. Use the PyTorch CPU index as the primary source
+--index-url https://download.pytorch.org/whl/cpu
+# 2. Use the main PyPI index as an extra source for all other packages
+--extra-index-url https://pypi.org/simple
+
+# Core API and server
+fastapi
+uvicorn[standard]
+
+# Data validation and utilities
+imagehash
+numpy
+pydantic[email]
+python-jose[cryptography]
+python-multipart
+PyJWT
+qrcode[pil]
+requests
+pillow
+
+# Database (MongoDB)
+motor
+pymongo
+
+# Vector Search & Embeddings
+ftfy
+pinecone
+sentence-transformers
+tqdm
+transformers
+
+# PyTorch (will be found in the primary index-url above)
+torch
+
+# Environment
+python-dotenv
+
+# Blockchain
+cryptography>=39.0.0
+web3>=6.0.0
