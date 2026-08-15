@@ -92,7 +92,7 @@ Before setting up the project, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/swarupn17/kalakaari.git
+https://github.com/Harin225/kalakaari-ai-solution
 cd kalakaari
 ```
 
