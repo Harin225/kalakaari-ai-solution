@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.schemas.craft import OnboardingData, VerificationResponse
 
 # Import the controller functions
-from app.controllers.craft_controllers import create_craftid, verify_craftid
+from app.controllers.craft_controllers import create_craftid, verify_craftid, list_all_craftids
 
 router = APIRouter(
     tags=["CraftID"]
@@ -22,3 +22,11 @@ async def verify_craftid_route(public_id: str):
     Verify the integrity and anchoring status of a CraftID.
     """
     return await verify_craftid(public_id)
+
+
+@router.get("/list")
+async def list_all_craftids_route():
+    """
+    List all CraftIDs sorted by timestamp (newest first).
+    """
+    return await list_all_craftids()

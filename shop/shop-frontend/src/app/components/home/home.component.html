@@ -21,8 +21,18 @@
        <p>{{ errorMessage() }}</p>
     </div>
   }
-  @if (!isLoading() && allProducts().length === 0 && !errorMessage()) { <div class="text-center text-text-muted text-lg py-16">
+  @if (!isLoading() && allProducts().length === 0 && !errorMessage()) {
+    <div class="text-center text-text-muted text-lg py-16">
       <p>No artisan products found yet. The gallery is currently empty.</p>
+      @if (userIsArtisan()) {
+        <button
+          type="button"
+          (click)="goToArtisanOnboarding()"
+          class="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 font-semibold text-background hover:bg-primary-light transition-colors duration-300"
+        >
+          List your first product
+        </button>
+      }
     </div>
   }
   @if (!isLoading() && filteredProducts().length === 0 && allProducts().length > 0) {

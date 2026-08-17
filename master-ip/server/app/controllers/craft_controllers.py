@@ -344,3 +344,47 @@ async def verify_craftid(public_id: str):
         blockchain_timestamp=blockchain_timestamp,
         verification_details=verification_details
     )
+
+
+async def list_all_craftids():
+    """
+    List all CraftIDs sorted by timestamp (newest first).
+    Returns a list of products in the same format as shop backend expects.
+    """
+    coll = collection("craftids")
+    
+    try:
+        cursor = coll.find().sort("timestamp", -1)
+        docs = await cursor.to_list(length=500)  # Limit to 500 products
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB read error: {e}")
+    
+    out = []
+    for d in docs:
+        orig = d.get("original_onboarding_data", {})
+        artisan = orig.get("artisan", {})
+        art = orig.get("art", {})
+        public_id = d.get("public_id")
+        verification_url = f"/verify/{public_id}" if public_id else ""
+        
+        # Handle both 'photo' and 'photo_url' fields
+        photo = art.get("photo_url") or art.get("photo", "")
+        
+        out.append({
+            "artisan_info": {
+                "name": artisan.get("name", ""),
+                "location": artisan.get("location", "")
+            },
+            "art_info": {
+                "name": art.get("name", ""),
+                "description": art.get("description", ""),
+                "photo": photo
+            },
+            "verification": {
+                "public_id": public_id or "",
+                "verification_url": verification_url
+            },
+            "timestamp": d.get("timestamp", "")
+        })
+    
+    return out

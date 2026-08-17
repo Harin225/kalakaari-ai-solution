@@ -17,7 +17,7 @@ export class LoginComponent {
   password = '';
   message = '';
   loading = false;
-  readonly agenticServiceUrl = 'https://agentic-service-978458840399.asia-southeast1.run.app/dev-ui/?app=agents';
+  readonly agenticServiceUrl = 'https://redesigned-engine-975x65x49wp93vg4-8080.app.github.dev/dev-ui';
 
   constructor(
     private auth: AuthService,

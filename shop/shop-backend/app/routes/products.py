@@ -6,6 +6,7 @@ import hashlib
 import jwt
 from datetime import datetime, timedelta
 import asyncio
+import httpx
 
 from app.models import ProductPayload # <-- IMPORT NEW MODEL
 # We only need 'collection' now
@@ -14,6 +15,7 @@ from app.mongodb import collection
 router = APIRouter()
 SECRET_KEY = os.getenv("SECRET_KEY", "change_in_prod")
 ALGORITHM = "HS256"
+MASTER_IP_URL = os.getenv("MASTER_IP_URL", "http://localhost:8000")  # <-- NEW: Master-IP backend URL
 
 @router.post("/add-product")
 async def add_product(data: ProductPayload): # <-- USE NEW MODEL
@@ -97,34 +99,52 @@ async def add_product(data: ProductPayload): # <-- USE NEW MODEL
 
 @router.get("/get-products")
 async def get_products():
-    craftids = collection("craftids")
+    """
+    Fetch products from Master-IP backend (single source of truth for CraftIDs).
+    Falls back to local database if Master-IP is unavailable.
+    """
     try:
-        # REMOVED asyncio.wait_for
-        cursor = craftids.find().sort("timestamp", -1)
-        docs = await cursor.to_list(length=200)
+        # --- TRY: Fetch from Master-IP backend (primary source) ---
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{MASTER_IP_URL}/list")
+            
+            if response.status_code == 200:
+                products = response.json()
+                return products if isinstance(products, list) else []
+            else:
+                raise HTTPException(status_code=response.status_code, detail="Failed to fetch from Master-IP")
+                
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Master-IP backend timed out")
+    except httpx.ConnectError:
+        # --- FALLBACK: If Master-IP unavailable, try local database ---
+        try:
+            craftids = collection("craftids")
+            cursor = craftids.find().sort("timestamp", -1)
+            docs = await cursor.to_list(length=200)
+            
+            out = []
+            for d in docs:
+                orig = d.get("original_onboarding_data", {})
+                artisan = orig.get("artisan", {})
+                art = orig.get("art", {})
+                public_id = d.get("public_id")
+                verification_url = f"/verify/{public_id}" if public_id else ""
+                
+                photo = art.get("photo_url") or art.get("photo", "")
+                
+                out.append({
+                    "artisan_info": {"name": artisan.get("name", ""), "location": artisan.get("location", "")},
+                    "art_info": {"name": art.get("name", ""), "description": art.get("description", ""), "photo": photo},
+                    "verification": {
+                        "public_id": public_id or "",
+                        "verification_url": verification_url
+                    },
+                    "timestamp": d.get("timestamp", "")
+                })
+            return out
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Both Master-IP and local DB failed: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"DB read error on get: {e}")
-
-    out = []
-    for d in docs:
-        orig = d.get("original_onboarding_data", {})
-        artisan = orig.get("artisan", {})
-        art = orig.get("art", {})
-        public_id = d.get("public_id")
-        verification_url = f"/verify/{public_id}" if public_id else ""
-
-        # COMPATIBILITY FIX: Check for 'photo_url' first, fall back to 'photo'
-        photo = art.get("photo_url") or art.get("photo", "")
-
-        out.append({
-            "artisan_info": {"name": artisan.get("name", ""), "location": artisan.get("location", "")},
-            "art_info": {"name": art.get("name", ""), "description": art.get("description", ""), "photo": photo}, # <-- Use compatible photo
-            "verification": {
-                "public_id": public_id or "", 
-                # "public_hash": REMOVED
-                "verification_url": verification_url
-            },
-            "timestamp": d.get("timestamp", "")
-        })
-
-    return out
+        raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")

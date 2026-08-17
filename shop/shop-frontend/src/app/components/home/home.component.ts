@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ApiClientService, Product, VerificationResponse } from '../../services/api-client.service';
 import { UiStateService } from '../../services/ui-state.service';
 import { ShopStateService } from '../../services/shop-state.service';
+import { AuthService } from '../../services/auth.service';
 import { catchError, finalize, map, of, tap } from 'rxjs';
 import { SkeletonCardComponent } from '../utils/skeleton-card/skeleton-card.component';
 import { VerificationModalComponent } from '../verification-modal/verification-modal.component'; // <-- IMPORT MODAL
@@ -20,6 +21,7 @@ export class HomeComponent implements OnInit {
   private apiService = inject(ApiClientService);
   private uiState = inject(UiStateService);
   private shopState = inject(ShopStateService);
+  private authService = inject(AuthService);
 
   // State Signals
   allProducts = signal<Product[]>([]);
@@ -44,6 +46,9 @@ export class HomeComponent implements OnInit {
     );
   });
 
+  readonly agenticServiceUrl = 'https://redesigned-engine-975x65x49wp93vg4-8080.app.github.dev/dev-ui';
+  userIsArtisan = computed(() => this.authService.currentUser()?.userType === 'artisan');
+
   // Other properties
   skeletonItems = new Array(6);
   // readonly polygonscanBaseUrl = 'https://amoy.polygonscan.com/tx/'; // <-- This is now in the modal
@@ -65,7 +70,10 @@ export class HomeComponent implements OnInit {
     }
     this.apiService.getProducts().pipe(
       tap(data => {
-        this.allProducts.set(data);
+        this.allProducts.set(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length === 0) {
+          this.errorMessage.set(null);
+        }
       }),
       catchError(error => {
         console.error('Failed to fetch products:', error);
@@ -77,6 +85,10 @@ export class HomeComponent implements OnInit {
         this.isLoading.set(false);
       })
     ).subscribe();
+  }
+
+  goToArtisanOnboarding(): void {
+    window.location.href = this.agenticServiceUrl;
   }
 
   /**

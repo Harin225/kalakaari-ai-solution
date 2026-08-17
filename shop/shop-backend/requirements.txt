@@ -7,3 +7,4 @@ python-dotenv>=1.0.0,<2.0.0
 pydantic>=2.0.0,<3.0.0 # Assuming FastAPI version uses Pydantic v2
 pyjwt>=2.0.0,<3.0.0
 dnspython>=2.0.0,<3.0.0 # Often needed for mongodb+srv URIs
+httpx>=0.24.0,<1.0.0  # For async HTTP requests to Master-IP backend

@@ -35,14 +35,16 @@ export interface VerificationResponse {
   blockchain_timestamp: string | null;
   verification_details: VerificationDetails;
 }
-
+//http://localhost:8001'
+// http://localhost:8000
 @Injectable({
   providedIn: 'root'
 })
 export class ApiClientService {
-  // URLs for different services
-  private readonly shopApiUrl = 'https://kalakaari-shop-backend-978458840399.asia-southeast1.run.app';
-  private readonly masterIpApiUrl = 'https://master-ip-service-978458840399.asia-southeast1.run.app';
+  // Use local development endpoints by default so the frontend talks to the
+  // services you are actively running on your machine.
+  private readonly shopApiUrl = 'https://redesigned-engine-975x65x49wp93vg4-8001.app.github.dev';
+  private readonly masterIpApiUrl = 'https://redesigned-engine-975x65x49wp93vg4-8000.app.github.dev';
 
   constructor(private http: HttpClient) { }
 

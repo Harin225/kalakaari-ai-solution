@@ -26,7 +26,7 @@ export class CompleteProfileComponent implements OnInit {
   userType: 'artisan' | 'art-lover' = 'art-lover'; // <-- CHANGED 'customer' to 'art-lover'
   loading = false;
   message = '';
-  readonly agenticServiceUrl = 'https://agentic-service-978458840399.asia-southeast1.run.app/dev-ui/?app=agents';
+  readonly agenticServiceUrl = 'https://redesigned-engine-975x65x49wp93vg4-8080.app.github.dev/dev-ui';
 
 
   ngOnInit(): void {
